@@ -392,39 +392,40 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		return err
 	}
 	script := fmt.Sprintf(`(() => {
-	const path = "%s".split(".")
-	const bindingIndex = path.length-1
-	let currentTarget = window
-	path.forEach((name, idx) => {
-		if(idx === bindingIndex) {
-			const bindingName = name;
-			const binding = currentTarget[bindingName];
-			currentTarget[bindingName] = async (...args) => {
-				const me = currentTarget[bindingName];
-				let errors = me['errors'];
-				let callbacks = me['callbacks'];
-				if (!callbacks) {
-					callbacks = new Map();
-					me['callbacks'] = callbacks;
-				}
-				if (!errors) {
-					errors = new Map();
-					me['errors'] = errors;
-				}
-				const seq = (me['lastSeq'] || 0) + 1;
-				me['lastSeq'] = seq;
-				const promise = new Promise((resolve, reject) => {
-					callbacks.set(seq, resolve);
-					errors.set(seq, reject);
-				});
-				binding(JSON.stringify({name: bindingName, seq, args}));
-				return promise;
-			}})();
-		} else {
-			currentTarget[name] = currentTarget[name] || {}
-			currentTarget = currentTarget[name]
-		}
-	})
+		const path = "%s".split(".");
+		const bindingIndex = path.length - 1;
+		let currentTarget = window;
+		path.forEach((name, idx) => {
+			if (idx === bindingIndex) {
+				const bindingName = name;
+				const binding = currentTarget[bindingName];
+				currentTarget[bindingName] = async (...args) => {
+					const me = currentTarget[bindingName];
+					let errors = me["errors"];
+					let callbacks = me["callbacks"];
+					if (!callbacks) {
+						callbacks = new Map();
+						me["callbacks"] = callbacks;
+					}
+					if (!errors) {
+						errors = new Map();
+						me["errors"] = errors;
+					}
+					const seq = (me["lastSeq"] || 0) + 1;
+					me["lastSeq"] = seq;
+					const promise = new Promise((resolve, reject) => {
+						callbacks.set(seq, resolve);
+						errors.set(seq, reject);
+					});
+					binding(JSON.stringify({ name: bindingName, seq, args }));
+					return promise;
+				};
+			} else {
+				currentTarget[name] = currentTarget[name] || {};
+				currentTarget = currentTarget[name];
+			}
+		});
+	})();
 	`, name)
 	_, err := c.send("Page.addScriptToEvaluateOnNewDocument", h{"source": script})
 	if err != nil {
