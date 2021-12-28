@@ -395,14 +395,15 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		return err
 	}
 	script := fmt.Sprintf(`(() => {
-		const name = '%s'
-		const path = name.split('.');
+		const name = "%s";
+		const path = name.split(".");
 		const bindingIndex = path.length - 1;
 		let currentTarget = window;
-		const binding = window['%s'];
-		window['%[2]s'] = undefined;
+		const binding = window["%s"];
+		window["%[2]s"] = undefined;
 		path.forEach((localName, idx) => {
-			if (idx === bindingIndex) {				
+			if (idx === bindingIndex) {
+				currentTarget[localName] = binding;
 				currentTarget[localName] = async (...args) => {
 					const me = binding;
 					let errors = me["errors"];
@@ -429,7 +430,7 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 				currentTarget = currentTarget[localName];
 			}
 		});
-	})();
+	})();	
 	`, name, globalName)
 	_, err := c.send("Page.addScriptToEvaluateOnNewDocument", h{"source": script})
 	if err != nil {
