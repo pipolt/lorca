@@ -280,10 +280,12 @@ func (c *chrome) readLoop() {
 				}{}
 				json.Unmarshal([]byte(res.Params.Payload), &payload)
 				log.Println("Runtime.bindingCalled", payload)
+				log.Println("Bindings:", c.bindings)
 
 				c.Lock()
 				binding, ok := c.bindings[res.Params.Name]
 				c.Unlock()
+				log.Println("Found", res.Params.Name, ok)
 				if ok {
 					jsString := func(v interface{}) string { b, _ := json.Marshal(v); return string(b) }
 					go func() {
