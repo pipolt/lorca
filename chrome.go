@@ -385,7 +385,9 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 	// check if binding already exists
 	_, exists := c.bindings[name]
 
-	c.bindings[name] = f
+	globalName := "_" + strings.Join(strings.Split(name, "."), "_")
+
+	c.bindings[globalName] = f
 	c.Unlock()
 
 	if exists {
@@ -393,8 +395,6 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		// and adding it again would break it.
 		return nil
 	}
-
-	globalName := "_" + strings.Join(strings.Split(name, "."), "_")
 
 	if _, err := c.send("Runtime.addBinding", h{"name": globalName}); err != nil {
 		return err
