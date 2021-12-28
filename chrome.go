@@ -297,13 +297,15 @@ func (c *chrome) readLoop() {
 						}
 						expr := fmt.Sprintf(`
 							if (%[4]s) {
-								window.%[1]s['errors'].get(%[2]d)(%[4]s);
+								window.%[1]s.errors.get(%[2]d)(%[4]s);
 							} else {
-								window.%[1]s['callbacks'].get(%[2]d)(%[3]s);
+								window.%[1]s.callbacks.get(%[2]d)(%[3]s);
 							}
 							window.%[1]s.callbacks.delete(%[2]d);
 							window.%[1]s.errors.delete(%[2]d);
 							`, payload.Name, payload.Seq, result, error)
+						log.Println(expr)
+						log.Println("contextId", res.Params.ID)
 						c.send("Runtime.evaluate", h{"expression": expr, "contextId": res.Params.ID})
 					}()
 				}
