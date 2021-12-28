@@ -403,18 +403,17 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		window["%[2]s"] = undefined;
 		path.forEach((localName, idx) => {
 			if (idx === bindingIndex) {
-				currentTarget[localName] = binding;
 				currentTarget[localName] = async (...args) => {
 					const me = binding;
-					let errors = me["errors"];
-					let callbacks = me["callbacks"];
+					let errors = currentTarget.errors;
+					let callbacks = currentTarget.callbacks;
 					if (!callbacks) {
 						callbacks = new Map();
-						me["callbacks"] = callbacks;
+						currentTarget[localName].callbacks = callbacks;
 					}
 					if (!errors) {
 						errors = new Map();
-						me["errors"] = errors;
+						currentTarget[localName].errors = errors;
 					}
 					const seq = (me["lastSeq"] || 0) + 1;
 					me["lastSeq"] = seq;
