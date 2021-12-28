@@ -401,10 +401,9 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		let currentTarget = window;
 		const binding = window['%s'];
 		window['%[2]s'] = undefined;
-		path.forEach((name, idx) => {
-			if (idx === bindingIndex) {
-				const bindingName = name;
-				currentTarget[bindingName] = async (...args) => {
+		path.forEach((localName, idx) => {
+			if (idx === bindingIndex) {				
+				currentTarget[localName] = async (...args) => {
 					const me = binding;
 					let errors = me["errors"];
 					let callbacks = me["callbacks"];
@@ -426,8 +425,8 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 					return promise;
 				};
 			} else {
-				currentTarget[name] = currentTarget[name] || {};
-				currentTarget = currentTarget[name];
+				currentTarget[localName] = currentTarget[localName] || {};
+				currentTarget = currentTarget[localName];
 			}
 		});
 	})();
