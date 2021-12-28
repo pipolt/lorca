@@ -296,12 +296,12 @@ func (c *chrome) readLoop() {
 						}
 						expr := fmt.Sprintf(`
 							if (%[4]s) {
-								window['%[1]s']['errors'].get(%[2]d)(%[4]s);
+								window%[1]s['errors'].get(%[2]d)(%[4]s);
 							} else {
-								window['%[1]s']['callbacks'].get(%[2]d)(%[3]s);
+								window%[1]s['callbacks'].get(%[2]d)(%[3]s);
 							}
-							window['%[1]s']['callbacks'].delete(%[2]d);
-							window['%[1]s']['errors'].delete(%[2]d);
+							window%[1]s.callbacks.delete(%[2]d);
+							window%[1]s.errors.delete(%[2]d);
 							`, payload.Name, payload.Seq, result, error)
 						c.send("Runtime.evaluate", h{"expression": expr, "contextId": res.Params.ID})
 					}()
@@ -395,7 +395,8 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		return err
 	}
 	script := fmt.Sprintf(`(() => {
-		const path = '%s'.split('.');
+		const name = '%s'
+		const path = name.split('.');
 		const bindingIndex = path.length - 1;
 		let currentTarget = window;
 		const binding = window['%s'];
@@ -421,7 +422,7 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 						callbacks.set(seq, resolve);
 						errors.set(seq, reject);
 					});
-					binding(JSON.stringify({ name: bindingName, seq, args }));
+					binding(JSON.stringify({ name: name, seq, args }));
 					return promise;
 				};
 			} else {
