@@ -10,6 +10,7 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -388,19 +389,22 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 		return nil
 	}
 
-	if _, err := c.send("Runtime.addBinding", h{"name": name}); err != nil {
+	globalName := "_" + strings.Join(strings.Split(name, "."), "_")
+
+	if _, err := c.send("Runtime.addBinding", h{"name": globalName}); err != nil {
 		return err
 	}
 	script := fmt.Sprintf(`(() => {
-		const path = "%s".split(".");
+		const path = '%s'.split('.');
 		const bindingIndex = path.length - 1;
 		let currentTarget = window;
+		const binding = window['%s'];
+		window['%[2]s'] = undefined;
 		path.forEach((name, idx) => {
 			if (idx === bindingIndex) {
 				const bindingName = name;
-				const binding = currentTarget[bindingName];
 				currentTarget[bindingName] = async (...args) => {
-					const me = currentTarget[bindingName];
+					const me = binding;
 					let errors = me["errors"];
 					let callbacks = me["callbacks"];
 					if (!callbacks) {
@@ -426,7 +430,7 @@ func (c *chrome) bind(name string, f bindingFunc) error {
 			}
 		});
 	})();
-	`, name)
+	`, name, globalName)
 	_, err := c.send("Page.addScriptToEvaluateOnNewDocument", h{"source": script})
 	if err != nil {
 		return err
