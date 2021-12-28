@@ -279,6 +279,7 @@ func (c *chrome) readLoop() {
 					Args []json.RawMessage `json:"args"`
 				}{}
 				json.Unmarshal([]byte(res.Params.Payload), &payload)
+				log.Println("Runtime.bindingCalled", payload)
 
 				c.Lock()
 				binding, ok := c.bindings[res.Params.Name]
