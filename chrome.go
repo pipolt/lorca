@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -271,7 +270,6 @@ func (c *chrome) readLoop() {
 			json.Unmarshal([]byte(params.Message), &res)
 
 			if res.ID == 0 && res.Method == "Runtime.consoleAPICalled" || res.Method == "Runtime.exceptionThrown" {
-				log.Println(params.Message)
 			} else if res.ID == 0 && res.Method == "Runtime.bindingCalled" {
 				payload := struct {
 					Name string            `json:"name"`
@@ -279,13 +277,10 @@ func (c *chrome) readLoop() {
 					Args []json.RawMessage `json:"args"`
 				}{}
 				json.Unmarshal([]byte(res.Params.Payload), &payload)
-				log.Println("Runtime.bindingCalled", payload)
-				log.Println("Bindings:", c.bindings)
 
 				c.Lock()
 				binding, ok := c.bindings[res.Params.Name]
 				c.Unlock()
-				log.Println("Found", res.Params.Name, ok)
 				if ok {
 					jsString := func(v interface{}) string { b, _ := json.Marshal(v); return string(b) }
 					go func() {
@@ -306,8 +301,6 @@ func (c *chrome) readLoop() {
 							window.%[1]s.callbacks.delete(%[2]d);
 							window.%[1]s.errors.delete(%[2]d);
 							`, payload.Name, payload.Seq, result, error)
-						log.Println(expr)
-						log.Println("contextId", res.Params.ID)
 						c.send("Runtime.evaluate", h{"expression": expr, "contextId": res.Params.ID})
 					}()
 				}
